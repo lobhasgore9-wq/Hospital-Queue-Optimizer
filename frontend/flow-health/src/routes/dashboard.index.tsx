@@ -131,7 +131,7 @@ function DashboardOverview() {
           <h3 className="text-sm font-semibold text-foreground mb-1">Wait Time Trend (Today)</h3>
           <p className="text-xs text-muted-foreground mb-4">Average patient wait across departments, updated every hour</p>
           <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={waitTimeData}>
                 <XAxis dataKey="hour" tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" />
                 <YAxis tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" unit=" min" />
@@ -149,7 +149,7 @@ function DashboardOverview() {
           <h3 className="text-sm font-semibold text-foreground mb-1">Token Status</h3>
           <p className="text-xs text-muted-foreground mb-4">Breakdown of today's {kpiData.totalPatients} tokens</p>
           <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
                 <Pie data={tokenStatusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
                   {tokenStatusData.map((entry) => (

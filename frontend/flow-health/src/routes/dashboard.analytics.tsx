@@ -38,7 +38,7 @@ function AnalyticsPage() {
           <h3 className="text-sm font-semibold text-foreground mb-1">Wait Time by Hour</h3>
           <p className="text-xs text-muted-foreground mb-4">Identifies peak congestion windows for staffing optimization</p>
           <div className="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={waitTimeData}>
                 <XAxis dataKey="hour" tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" />
                 <YAxis tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" unit=" min" />
@@ -57,7 +57,7 @@ function AnalyticsPage() {
           <h3 className="text-sm font-semibold text-foreground mb-1">Patient Distribution</h3>
           <p className="text-xs text-muted-foreground mb-4">Helps balance patient load across departments</p>
           <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
                 <Pie data={patientDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
                   {patientDistribution.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
@@ -80,7 +80,7 @@ function AnalyticsPage() {
           <h3 className="text-sm font-semibold text-foreground mb-1">Doctor-Wise Patient Load</h3>
           <p className="text-xs text-muted-foreground mb-4">Identifies imbalanced workload for smarter patient redistribution</p>
           <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={doctorLoad}>
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="currentColor" className="text-muted-foreground" />
                 <YAxis tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" />

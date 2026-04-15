@@ -59,22 +59,22 @@ const FALLBACK_DATA = {
 };
 
 function DashboardOverview() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>(FALLBACK_DATA);
   const [activeTokens, setActiveTokens] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [backendStatus, setBackendStatus] = useState<'loading' | 'live' | 'offline'>('loading');
 
   useEffect(() => {
+    let retryTimeout: ReturnType<typeof setTimeout>;
+
     const fetchDashboard = async () => {
       try {
         const res = await api.get('/dashboard/summary');
         setData(res);
-      } catch (err) {
-        console.warn('Backend unavailable, using fallback data:', err);
-        setData(FALLBACK_DATA);
-        setError('Could not connect to backend — showing demo data.');
-      } finally {
-        setLoading(false);
+        setBackendStatus('live');
+      } catch {
+        setBackendStatus('offline');
+        // Retry silently every 20 seconds until backend wakes up
+        retryTimeout = setTimeout(fetchDashboard, 20000);
       }
     };
 
@@ -89,30 +89,38 @@ function DashboardOverview() {
 
     fetchDashboard();
     fetchTokens();
-  }, []);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-sm text-muted-foreground">Loading dashboard metrics...</p>
-      </div>
-    );
-  }
+    return () => clearTimeout(retryTimeout);
+  }, []);
 
   const { kpiData, waitTimeData, tokenStatusData, departments, notifications } = data;
 
   return (
     <div className="space-y-6">
-      {error && (
+      {backendStatus === 'offline' && (
         <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          {error}
+          Backend is waking up — showing demo data. Data will sync automatically in a moment.
         </div>
       )}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard Overview</h1>
-        <p className="text-sm text-muted-foreground">Real-time hospital operations snapshot — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground">Dashboard Overview</h1>
+            {backendStatus === 'live' ? (
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-success/10 text-[10px] font-bold text-success uppercase tracking-wider">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                Live
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/10 text-[10px] font-bold text-warning uppercase tracking-wider">
+                <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                Syncing...
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">Real-time hospital operations snapshot — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+        </div>
       </div>
 
       {/* KPIs */}

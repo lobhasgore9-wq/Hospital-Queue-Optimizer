@@ -37,20 +37,16 @@ function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Redirect to login if not authenticated after Firebase has resolved
   useEffect(() => {
-    if (!loading && !user) {
-      navigate({ to: '/login' });
-    }
+    if (!loading && !user) navigate({ to: '/login' });
   }, [loading, user, navigate]);
 
-  // Show spinner while Firebase resolves auth state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading your session...</p>
+        <div className="flex flex-col items-center gap-4 animate-scale-in">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent shadow-glow-primary" />
+          <p className="text-sm font-medium text-muted-foreground tracking-wide uppercase">Initializing Intelligence...</p>
         </div>
       </div>
     );
@@ -67,109 +63,119 @@ function DashboardLayout() {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className={`min-h-screen flex text-foreground bg-background gradient-mesh font-sans ${dark ? 'dark' : ''}`}>
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col border-r border-border bg-sidebar transition-all duration-300 ${sidebarOpen ? 'w-60' : 'w-16'}`}>
-        <div className="flex h-14 items-center justify-between px-3 border-b border-sidebar-border">
+      <aside className={`hidden lg:flex flex-col border-r border-border/40 glass-panel transition-all duration-500 ease-in-out z-20 ${sidebarOpen ? 'w-72' : 'w-20'}`}>
+        <div className="flex h-20 items-center justify-between px-6 border-b border-border/20">
           {sidebarOpen && (
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-                <Activity className="h-4 w-4 text-primary-foreground" />
+            <div className="flex items-center gap-3 animate-fade-in">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary shadow-glow-primary rotate-3">
+                <Activity className="h-5 w-5 text-primary-foreground -rotate-3" />
               </div>
-              <span className="text-sm font-bold text-sidebar-foreground">HQO</span>
+              <span className="text-xl font-bold tracking-tighter font-heading text-gradient">FLOW HEALTH</span>
             </div>
           )}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
-            <Menu className="h-4 w-4" />
-          </button>
+          {!sidebarOpen && (
+             <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary mx-auto">
+                <Activity className="h-5 w-5 text-primary-foreground" />
+             </div>
+          )}
+          {sidebarOpen && (
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all">
+              <ChevronDown className="h-5 w-5 rotate-90" />
+            </button>
+          )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-          {navItems.map((item) => (
-            <Link key={item.to} to={item.to} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive(item.to) ? 'bg-sidebar-accent text-sidebar-primary font-medium' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'}`}>
-              <item.icon className="h-4 w-4 shrink-0" />
-              {sidebarOpen && <span>{item.label}</span>}
-            </Link>
-          ))}
+        <nav className="flex-1 overflow-y-auto py-8 px-4 space-y-2 scrollbar-hide">
+          {navItems.map((item) => {
+            const active = isActive(item.to);
+            return (
+              <Link key={item.to} to={item.to} className={`flex items-center gap-4 rounded-2xl px-4 py-3 text-sm transition-all duration-300 group ${
+                active 
+                ? 'bg-primary text-primary-foreground shadow-glow-primary font-bold scale-102' 
+                : 'text-muted-foreground hover:bg-white/10 hover:text-foreground hover:pl-6'
+              }`}>
+                <item.icon className={`h-5 w-5 shrink-0 transition-all ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
+                {sidebarOpen && <span className="tracking-tight">{item.label}</span>}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="border-t border-sidebar-border p-3">
+        <div className="p-6 border-t border-border/20">
           {sidebarOpen && user && (
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+            <div className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/10 shadow-premium animate-fade-in">
+              <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground shadow-glow-primary uppercase">
                 {user.name.charAt(0)}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-medium text-sidebar-foreground truncate">{user.name}</div>
-                <div className="text-xs text-sidebar-foreground/50 capitalize">{user.role.replace('-', ' ')}</div>
+                <div className="text-sm font-bold truncate">{user.name}</div>
+                <div className="text-[10px] font-bold text-primary uppercase tracking-widest">{user.role}</div>
               </div>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Mobile sidebar overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto">
-            <div className="flex h-14 items-center justify-between px-4 border-b border-sidebar-border">
-              <span className="text-sm font-bold text-sidebar-foreground">HQO</span>
-              <button onClick={() => setMobileOpen(false)}><X className="h-4 w-4 text-sidebar-foreground" /></button>
-            </div>
-            <nav className="py-2 px-2 space-y-0.5">
-              {navItems.map((item) => (
-                <Link key={item.to} to={item.to} onClick={() => setMobileOpen(false)} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive(item.to) ? 'bg-sidebar-accent text-sidebar-primary font-medium' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50'}`}>
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-          </aside>
-        </div>
-      )}
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card">
-          <div className="flex items-center gap-3">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-transparent">
+        {/* Modern Top Header */}
+        <header className="h-20 flex items-center justify-between px-8 glass-panel border-b border-border/20 z-10 mx-6 mt-6 rounded-3xl shadow-premium">
+          <div className="flex items-center gap-6">
+            {!sidebarOpen && (
+               <button onClick={() => setSidebarOpen(true)} className="hidden lg:flex p-2 rounded-xl bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground transition-all">
+                  <Menu className="h-5 w-5" />
+               </button>
+            )}
             <button className="lg:hidden text-foreground" onClick={() => setMobileOpen(true)}>
-              <Menu className="h-5 w-5" />
+              <Menu className="h-6 w-6" />
             </button>
-            <div className="hidden sm:flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 w-64">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <input placeholder="Search patients, tokens..." className="bg-transparent text-sm outline-none w-full text-foreground placeholder:text-muted-foreground" />
+            <div className="hidden sm:flex items-center gap-4 rounded-2xl bg-black/5 hover:bg-black/10 transition-all border border-transparent hover:border-border/30 px-5 py-2.5 w-80 group">
+              <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <input placeholder="Global search..." className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground/50 font-medium" />
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground">
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <div className="flex items-center gap-4">
+            <button onClick={toggleTheme} className="h-11 w-11 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-primary transition-all shadow-sm">
+              {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
-            <button className="relative h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground">
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-            </button>
-            <div className="hidden sm:flex items-center gap-2 ml-2 pl-2 border-l border-border">
+            
+            <div className="h-11 w-px bg-border/20 mx-2" />
+
+            <div className="flex items-center gap-4">
               {user && (
-                <>
-                  <div className="h-7 w-7 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-                    {user.name.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{user.name}</span>
-                </>
+                <div className="hidden sm:flex flex-col items-end mr-2">
+                  <span className="text-xs font-bold text-foreground leading-none">{user.name}</span>
+                  <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-tighter mt-1 opacity-60">System Admin</span>
+                </div>
               )}
-              <Link to="/" onClick={async () => { await logout(); navigate({ to: '/login' }); }}>
-                <Button variant="ghost" size="icon" className="h-7 w-7"><LogOut className="h-3.5 w-3.5" /></Button>
-              </Link>
+              <div className="relative group cursor-pointer">
+                <div className="h-11 w-11 rounded-2xl gradient-primary flex items-center justify-center text-sm font-bold text-white shadow-glow-primary group-hover:scale-105 transition-transform">
+                  {user?.name.charAt(0)}
+                </div>
+                <div className="absolute right-0 top-[120%] w-48 bg-card border border-border/40 rounded-2xl shadow-premium p-2 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto">
+                    <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-primary/5 hover:text-primary rounded-xl transition-all">
+                      <Settings className="h-4 w-4" /> Profile Systems
+                    </button>
+                    <button 
+                      onClick={async () => { await logout(); navigate({ to: '/login' }); }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-destructive hover:bg-destructive/5 rounded-xl transition-all"
+                    >
+                      <LogOut className="h-4 w-4" /> Terminate Session
+                    </button>
+                </div>
+              </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <main className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
           <TokenProvider>
-            <Outlet />
+            <div className="max-w-[1600px] mx-auto">
+              <Outlet />
+            </div>
           </TokenProvider>
         </main>
       </div>

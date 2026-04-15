@@ -1,8 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Activity, Users, Clock, Ticket, AlertTriangle, Stethoscope, TrendingUp, TrendingDown, Bell } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/dashboard/')({
   component: DashboardOverview,
@@ -95,6 +96,29 @@ function DashboardOverview() {
   }, []);
 
   const { kpiData, waitTimeData, tokenStatusData, departments, notifications } = data;
+  const navigate = useNavigate();
+
+  const handleExport = () => {
+    try {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hqo-intelligence-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Operational data exported successfully.");
+    } catch (err) {
+      toast.error("Critical error during data extraction.");
+    }
+  };
+
+  const handleGenerateReport = () => {
+    toast.info("Synthesizing comprehensive analytics report...");
+    setTimeout(() => {
+      navigate({ to: '/dashboard/reports' });
+    }, 1500);
+  };
 
   return (
     <div className="space-y-8 pb-10 animate-fade-in-up">
@@ -131,8 +155,18 @@ function DashboardOverview() {
           </p>
         </div>
         <div className="flex gap-2">
-           <button className="px-4 py-2 rounded-xl bg-primary text-white font-semibold text-sm hover:shadow-glow-primary transition-all active:scale-95">Generate Report</button>
-           <button className="px-4 py-2 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted transition-all">Export Data</button>
+           <button 
+             onClick={handleGenerateReport}
+             className="px-4 py-2 rounded-xl bg-primary text-white font-semibold text-sm hover:shadow-glow-primary transition-all active:scale-95"
+           >
+             Generate Report
+           </button>
+           <button 
+             onClick={handleExport}
+             className="px-4 py-2 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted transition-all"
+           >
+             Export Data
+           </button>
         </div>
       </div>
 

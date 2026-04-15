@@ -32,9 +32,9 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string, role?: UserRole) => Promise<void>;
-  loginWithGoogle: (role?: UserRole) => Promise<void>;
-  signup: (email: string, password: string, name: string, role?: UserRole) => Promise<void>;
+  login: (email: string, password: string, role?: UserRole) => Promise<any>;
+  loginWithGoogle: (role?: UserRole) => Promise<any>;
+  signup: (email: string, password: string, name: string, role?: UserRole) => Promise<any>;
   logout: () => Promise<void>;
   setRole: (role: UserRole) => void;
 }
@@ -76,19 +76,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     localStorage.setItem('userRole', role);
     setUser(mapFirebaseUser(cred.user, role));
+    return cred;
   }, []);
 
   const loginWithGoogle = useCallback(async (role: UserRole = 'admin') => {
     const cred = await signInWithPopup(auth, googleProvider);
     localStorage.setItem('userRole', role);
     setUser(mapFirebaseUser(cred.user, role));
+    return cred;
   }, []);
 
   const signup = useCallback(async (email: string, password: string, name: string, role: UserRole = 'admin') => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
     localStorage.setItem('userRole', role);
-    setUser(mapFirebaseUser({ ...cred.user, displayName: name }, role));
+    setUser(mapFirebaseUser({ ...cred.user, displayName: name } as FirebaseUser, role));
+    return cred;
   }, []);
 
   const logout = useCallback(async () => {

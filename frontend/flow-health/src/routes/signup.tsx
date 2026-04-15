@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Activity, Mail, Lock, User, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import { sendWelcomeEmail } from '@/lib/email';
 
 export const Route = createFileRoute('/signup')({
   head: () => ({
@@ -35,6 +36,10 @@ function SignupPage() {
     setError('');
     try {
       await signup(email, password, name, 'admin');
+      
+      // Attempt to send welcome email (async, don't block navigation)
+      sendWelcomeEmail(name, email).catch(console.error);
+
       toast.success('Account created! Welcome to HQO.');
       navigate({ to: '/dashboard' });
     } catch (err: any) {
@@ -54,7 +59,13 @@ function SignupPage() {
     setSubmitting(true);
     setError('');
     try {
-      await loginWithGoogle('admin');
+      const res = await loginWithGoogle('admin');
+      
+      // Attempt to send welcome email for social signup
+      if (res?.user?.displayName && res?.user?.email) {
+        sendWelcomeEmail(res.user.displayName, res.user.email).catch(console.error);
+      }
+
       toast.success('Account created with Google!');
       navigate({ to: '/dashboard' });
     } catch (err: any) {

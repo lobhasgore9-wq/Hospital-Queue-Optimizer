@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Monitor, Users, Clock, AlertTriangle } from 'lucide-react';
+import { Monitor, Users, Clock, AlertTriangle, Stethoscope, Activity } from 'lucide-react';
 import { useTokenStore } from '@/lib/token-store';
 import { departments } from '@/lib/demo-data';
 

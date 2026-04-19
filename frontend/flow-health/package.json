@@ -4,7 +4,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --open",
+    "live": "start https://hospital-queue-optimizer-jet.vercel.app/dashboard",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint ."

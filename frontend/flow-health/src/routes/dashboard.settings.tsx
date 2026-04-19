@@ -1,15 +1,41 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Settings, Bell, Shield, Clock, Users, Building2, Save } from 'lucide-react';
+import { Settings, Bell, Shield, Clock, Users, Building2, Save, Mail, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
+import { sendTestEmail } from '@/lib/email';
 
 export const Route = createFileRoute('/dashboard/settings')({ component: SettingsPage });
 
 function SettingsPage() {
   const [tab, setTab] = useState('general');
   const [saved, setSaved] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
+  const { user } = useAuth();
 
   const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
+  const handleTestEmail = async () => {
+    if (!user?.email) {
+      toast.error('User email not found. Please ensure you are logged in.');
+      return;
+    }
+
+    setTestingEmail(true);
+    try {
+      await sendTestEmail(user.email);
+      toast.success('Test email sent successfully!', {
+        description: `A test email has been sent to ${user.email}`,
+      });
+    } catch (err) {
+      toast.error('Failed to send test email.', {
+        description: 'Please check your EmailJS configuration and internet connection.',
+      });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   const tabs = [
     { id: 'general', label: 'General', icon: Settings },
@@ -84,18 +110,65 @@ function SettingsPage() {
           </div>
         )}
         {tab === 'notifications' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Notification Preferences</h2>
-            {['Token Generated', '3 Turns Left', 'Your Turn Next', 'Doctor Delayed', 'Missed Token Alert', 'Queue Reassignment'].map(n => (
-              <div key={n} className="flex items-center justify-between rounded-lg border border-border p-3">
-                <span className="text-sm text-foreground">{n}</span>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" defaultChecked className="rounded" /> In-App</label>
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" defaultChecked className="rounded" /> SMS</label>
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" className="rounded" /> Email</label>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Notification Preferences</h2>
+              <p className="text-sm text-muted-foreground mb-4">Choose which events trigger automated notifications</p>
+              <div className="space-y-2">
+                {['Token Generated', '3 Turns Left', 'Your Turn Next', 'Doctor Delayed', 'Missed Token Alert', 'Queue Reassignment'].map(n => (
+                  <div key={n} className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <span className="text-sm text-foreground">{n}</span>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" defaultChecked className="rounded" /> In-App</label>
+                      <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" defaultChecked className="rounded" /> SMS</label>
+                      <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" className="rounded" /> Email</label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-border">
+              <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" /> Email Service Configuration (EmailJS)
+              </h3>
+              <div className="rounded-lg bg-muted/30 p-4 border border-border">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Verify Service Connection</p>
+                    <p className="text-xs text-muted-foreground">Send a test email to <span className="font-semibold text-foreground">{user?.email}</span> to verify your Service ID and Public Key.</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleTestEmail} 
+                    disabled={testingEmail}
+                    className="gap-2"
+                  >
+                    {testingEmail ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending...</>
+                    ) : (
+                      <><Mail className="h-3.5 w-3.5" /> Test Connection</>
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="rounded bg-background p-2 border border-border">
+                    <div className="text-[10px] uppercase text-muted-foreground font-bold">Service ID</div>
+                    <div className="text-xs font-mono mt-1 text-foreground truncate">{import.meta.env.VITE_EMAILJS_SERVICE_ID || 'Not Configured'}</div>
+                  </div>
+                  <div className="rounded bg-background p-2 border border-border">
+                    <div className="text-[10px] uppercase text-muted-foreground font-bold">Template ID</div>
+                    <div className="text-xs font-mono mt-1 text-foreground truncate">{import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'Not Configured'}</div>
+                  </div>
+                  <div className="rounded bg-background p-2 border border-border">
+                    <div className="text-[10px] uppercase text-muted-foreground font-bold">Public Key</div>
+                    <div className="text-xs font-mono mt-1 text-foreground truncate">{import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'Not Configured'}</div>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
         {tab === 'access' && (

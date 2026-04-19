@@ -103,3 +103,35 @@ export function subscribeToComplaints(callback: (data: DocumentData[]) => void) 
 export async function deleteComplaint(id: string) {
   await deleteDoc(doc(db, 'complaints', id));
 }
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+export const paymentsRef = collection(db, 'payments');
+
+export async function getPayments() {
+  const snapshot = await getDocs(paymentsRef);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function addPayment(data: DocumentData) {
+  const docRef = await addDoc(paymentsRef, {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+  return { id: docRef.id, ...data };
+}
+
+export async function updatePayment(id: string, data: Partial<DocumentData>) {
+  await updateDoc(doc(db, 'payments', id), data);
+}
+
+export function subscribeToPayments(callback: (data: DocumentData[]) => void) {
+  return onSnapshot(paymentsRef, snapshot => {
+    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    docs.sort((a: any, b: any) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+    callback(docs);
+  });
+}

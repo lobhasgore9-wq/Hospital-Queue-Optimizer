@@ -21,7 +21,7 @@ export function LandingHeader() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
               <Activity className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground">HQO</span>
+            <span className="text-xl font-bold tracking-tighter font-heading text-gradient">FLOW HEALTH</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

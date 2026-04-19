@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 export const Route = createFileRoute('/login')({
   head: () => ({
     meta: [
-      { title: 'Sign In — Hospital Queue Optimizer' },
-      { name: 'description', content: 'Sign in to your Hospital Queue Optimizer account.' },
+      { title: 'Sign In — Flow Health' },
+      { name: 'description', content: 'Sign in to your Flow Health account.' },
     ],
   }),
   component: LoginPage,
@@ -137,10 +137,10 @@ function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
               <Activity className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground">HQO</span>
+            <span className="text-xl font-bold tracking-tighter font-heading text-gradient">FLOW HEALTH</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to your Hospital Queue Optimizer account</p>
+          <p className="text-sm text-muted-foreground mt-1">Sign in to your Flow Health account</p>
         </div>
 
         {error && (

@@ -11,8 +11,8 @@ import { sendWelcomeEmail } from '@/lib/email';
 export const Route = createFileRoute('/signup')({
   head: () => ({
     meta: [
-      { title: 'Sign Up — Hospital Queue Optimizer' },
-      { name: 'description', content: 'Create your Hospital Queue Optimizer account.' },
+      { title: 'Sign Up — Flow Health' },
+      { name: 'description', content: 'Create your Flow Health account.' },
     ],
   }),
   component: SignupPage,
@@ -37,10 +37,16 @@ function SignupPage() {
     try {
       await signup(email, password, name, 'admin');
       
-      // Attempt to send welcome email (async, don't block navigation)
-      sendWelcomeEmail(name, email).catch(console.error);
+      // Send welcome email
+      try {
+        await sendWelcomeEmail(name, email, 'admin');
+        toast.success('Welcome email sent!');
+      } catch (err) {
+        console.error('Email sending failed:', err);
+        toast.error('Account created, but welcome email could not be sent.');
+      }
 
-      toast.success('Account created! Welcome to HQO.');
+      toast.success('Account created! Welcome to Flow Health.');
       navigate({ to: '/dashboard' });
     } catch (err: any) {
       const msg = err?.code === 'auth/email-already-in-use'
@@ -61,10 +67,14 @@ function SignupPage() {
     try {
       const res = await loginWithGoogle('admin');
       
-      // Attempt to send welcome email for social signup
-      if (res?.user?.displayName && res?.user?.email) {
-        sendWelcomeEmail(res.user.displayName, res.user.email).catch(console.error);
-      }
+        // Send welcome email
+        try {
+          await sendWelcomeEmail(res.user.displayName, res.user.email, 'admin');
+          toast.success('Welcome email sent!');
+        } catch (err) {
+          console.error('Email sending failed:', err);
+          // Don't show error toast for google signup to avoid confusing the user
+        }
 
       toast.success('Account created with Google!');
       navigate({ to: '/dashboard' });
@@ -85,10 +95,10 @@ function SignupPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
               <Activity className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground">HQO</span>
+            <span className="text-xl font-bold tracking-tighter font-heading text-gradient">FLOW HEALTH</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
-          <p className="text-sm text-muted-foreground mt-1">Get started with Hospital Queue Optimizer</p>
+          <p className="text-sm text-muted-foreground mt-1">Get started with Flow Health</p>
         </div>
 
         {error && (

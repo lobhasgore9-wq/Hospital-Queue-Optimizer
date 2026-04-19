@@ -28,7 +28,7 @@ export function HeroSection() {
             </h1>
 
             <p className="text-lg text-primary-foreground/70 max-w-xl mx-auto lg:mx-0">
-              Hospital Queue Optimizer transforms chaotic waiting rooms into intelligent, 
+              Flow Health transforms chaotic waiting rooms into intelligent, 
               predictive patient flow systems. Reduce wait times by 40%, eliminate queue confusion, 
               and give every patient real-time visibility into their turn.
             </p>

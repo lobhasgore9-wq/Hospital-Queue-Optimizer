@@ -4,8 +4,9 @@ import { Clock, Plus, Search, X, Check, AlertTriangle, User } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { doctors } from '@/lib/demo-data';
-import { subscribeToAppointments, addAppointment, updateAppointment } from '@/lib/firestore';
+import { subscribeToAppointments, addAppointment, updateAppointment, addPayment } from '@/lib/firestore';
 import { toast } from 'sonner';
+import { QrCode } from 'lucide-react';
 
 interface Appointment {
   id: string;
@@ -44,6 +45,8 @@ function AppointmentsPage() {
   const [showNew, setShowNew] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
 
   // Subscribe to real-time Firestore updates
   useEffect(() => {
@@ -78,6 +81,27 @@ function AppointmentsPage() {
       await updateAppointment(id, { status });
     } catch {
       toast.error('Failed to update appointment status');
+    }
+  };
+
+  const handlePaymentConfirm = async () => {
+    if (!selectedAppointmentId) return;
+    try {
+      // 1. Record the payment in Firestore
+      await addPayment({
+        appointmentId: selectedAppointmentId,
+        amount: 200, // Registration fee
+        method: 'UPI',
+        status: 'completed',
+        date: new Date().toISOString(),
+      });
+      // 2. Update the appointment status to confirmed
+      await updateStatus(selectedAppointmentId, 'confirmed');
+      toast.success('Payment successful & Appointment confirmed!');
+      setPaymentModalOpen(false);
+      setSelectedAppointmentId(null);
+    } catch (error) {
+      toast.error('Payment processing failed');
     }
   };
 
@@ -159,7 +183,7 @@ function AppointmentsPage() {
               }`}>{a.type}</span>
             </div>
             <div className="flex gap-1.5">
-              {a.status === 'pending' && <Button size="sm" variant="outline" onClick={() => updateStatus(a.id, 'confirmed')} className="gap-1 text-xs"><Check className="h-3 w-3" /> Confirm</Button>}
+              {a.status === 'pending' && <Button size="sm" variant="default" onClick={() => { setSelectedAppointmentId(a.id); setPaymentModalOpen(true); }} className="gap-1 text-xs"><QrCode className="h-3 w-3" /> Pay & Confirm</Button>}
               {a.status === 'confirmed' && <Button size="sm" variant="outline" onClick={() => updateStatus(a.id, 'completed')} className="gap-1 text-xs"><Check className="h-3 w-3" /> Complete</Button>}
               {(a.status === 'confirmed' || a.status === 'pending') && <Button size="sm" variant="ghost" onClick={() => updateStatus(a.id, 'cancelled')} className="gap-1 text-xs text-destructive"><X className="h-3 w-3" /> Cancel</Button>}
               {a.status === 'confirmed' && <Button size="sm" variant="ghost" onClick={() => updateStatus(a.id, 'no-show')} className="gap-1 text-xs"><AlertTriangle className="h-3 w-3" /> No-Show</Button>}
@@ -176,6 +200,27 @@ function AppointmentsPage() {
             <DialogDescription>Schedule a patient appointment</DialogDescription>
           </DialogHeader>
           <NewAppointmentForm onSubmit={handleNewAppointment} />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>Scan QR to pay the 200rs registration fee.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4 space-y-4">
+            <div className="bg-white p-4 rounded-xl shadow-sm border">
+               {/* Dummy QR Code Placeholder */}
+               <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="Payment QR" className="w-48 h-48" />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-lg text-foreground">₹200.00</p>
+              <p className="text-sm text-muted-foreground">UPI ID: 7385399392@axl</p>
+            </div>
+            <Button onClick={handlePaymentConfirm} className="w-full gap-2 mt-4">
+              <Check className="w-4 h-4" /> Confirm Payment
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

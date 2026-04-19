@@ -4,6 +4,8 @@ import { UserPlus, Check, Printer, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTokenStore } from '@/lib/token-store';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { addPayment } from '@/lib/firestore';
 import { doctors, departments, type Token, type Priority } from '@/lib/demo-data';
 
 export const Route = createFileRoute('/dashboard/walk-in')({ component: WalkInPage });
@@ -18,13 +20,21 @@ function WalkInPage() {
   const [priority, setPriority] = useState<Priority>('normal');
   const [generatedToken, setGeneratedToken] = useState<Token | null>(null);
   const [recentTokens, setRecentTokens] = useState<Token[]>([]);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const deptPrefixes: Record<string, string> = { OPD: 'OPD', Cardiology: 'CARDIO', Radiology: 'XRAY', Pathology: 'LAB', Pediatrics: 'PED', Orthopedics: 'ORTHO', Emergency: 'ER', Pharmacy: 'PHARM', Billing: 'BILL' };
   const deptDoctors: Record<string, string> = { OPD: 'Dr. Priya Sharma', Cardiology: 'Dr. Rajesh Gupta', Radiology: 'Dr. Sneha Iyer', Pathology: 'Dr. Sanjay Verma', Pediatrics: 'Dr. Ananya Patel', Orthopedics: 'Dr. Vikram Singh', Emergency: 'Dr. Karan Mehta', Pharmacy: 'Staff', Billing: 'Staff' };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInitialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentConfirm = async () => {
+    setIsSubmitting(true);
+    try {
     const prefix = deptPrefixes[dept] || 'OPD';
     const num = String(Math.floor(Math.random() * 900) + 100);
     const now = new Date();
@@ -43,11 +53,28 @@ function WalkInPage() {
     };
 
     // Add to global store — instantly visible on Queue, Tokens, Patient Status pages
-    await addToken(token);
+    const createdToken = await addToken(token);
+    
+    // Store payment record associated with this token
+    await addPayment({
+      tokenId: createdToken?.id || token.id,
+      amount: 200,
+      method: 'UPI',
+      status: 'completed',
+      date: new Date().toISOString(),
+      type: 'registration_fee'
+    });
+
     setGeneratedToken(token);
     setRecentTokens(prev => [token, ...prev]);
     setName(''); setAge(''); setPhone('');
-    toast.success('Patient registered! Token is now live in the queue.');
+    toast.success('Payment successful & Patient registered!');
+    setPaymentModalOpen(false);
+    } catch (err) {
+      toast.error('Registration failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const deptInfo = departments.find(d => d.name === dept) || departments[0];
@@ -63,7 +90,7 @@ function WalkInPage() {
         {/* Registration Form */}
         <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2"><UserPlus className="h-5 w-5 text-primary" /> Patient Registration</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleInitialSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><label className="text-sm font-medium text-foreground">Full Name *</label><input value={name} onChange={e => setName(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" placeholder="Patient full name" required /></div>
               <div><label className="text-sm font-medium text-foreground">Age</label><input value={age} onChange={e => setAge(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" placeholder="Age" type="number" /></div>
@@ -120,6 +147,29 @@ function WalkInPage() {
           )}
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>Scan QR to pay the 200rs registration fee.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4 space-y-4">
+            <div className="bg-white p-4 rounded-xl shadow-sm border">
+               {/* Dummy QR Code Placeholder */}
+               <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="Payment QR" className="w-48 h-48" />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-lg text-foreground">₹200.00</p>
+              <p className="text-sm text-muted-foreground">UPI ID: 7385399392@axl</p>
+            </div>
+            <Button onClick={handlePaymentConfirm} className="w-full gap-2 mt-4" disabled={isSubmitting}>
+              {isSubmitting ? 'Confirming...' : <><Check className="w-4 h-4" /> Confirm Payment & Register</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

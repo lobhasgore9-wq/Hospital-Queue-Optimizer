@@ -13,6 +13,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
@@ -36,6 +37,7 @@ interface AuthContextType {
   loginWithGoogle: (role?: UserRole) => Promise<any>;
   signup: (email: string, password: string, name: string, role?: UserRole) => Promise<any>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   setRole: (role: UserRole) => void;
 }
 
@@ -101,6 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setFirebaseUser(null);
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  }, []);
+
   const setRole = useCallback((role: UserRole) => {
     localStorage.setItem('userRole', role);
     if (firebaseUser) {
@@ -111,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, firebaseUser, isAuthenticated: !!user, loading,
-      login, loginWithGoogle, signup, logout, setRole,
+      login, loginWithGoogle, signup, logout, setRole, resetPassword,
     }}>
       {children}
     </AuthContext.Provider>

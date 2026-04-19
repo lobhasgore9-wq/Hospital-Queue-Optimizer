@@ -32,7 +32,7 @@ export const Route = createFileRoute('/dashboard')({
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true);
   const { user, loading, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();

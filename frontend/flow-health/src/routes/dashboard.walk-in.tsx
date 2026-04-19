@@ -53,11 +53,11 @@ function WalkInPage() {
     };
 
     // Add to global store — instantly visible on Queue, Tokens, Patient Status pages
-    const createdToken = await addToken(token);
+    await addToken(token);
     
     // Store payment record associated with this token
     await addPayment({
-      tokenId: createdToken?.id || token.id,
+      tokenId: token.id,
       amount: 200,
       method: 'UPI',
       status: 'completed',

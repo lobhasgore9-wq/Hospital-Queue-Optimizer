@@ -107,7 +107,7 @@ function AppointmentsPage() {
 
   const handleNewAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
     try {
-      const created = await addAppointment(appointmentData);
+      const created = (await addAppointment(appointmentData)) as Appointment;
       setSelectedDate(created.date);
       setShowNew(false);
       toast.success('Appointment booked and saved to Firestore!');
